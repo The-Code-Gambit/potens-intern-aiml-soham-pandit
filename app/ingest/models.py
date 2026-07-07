@@ -63,3 +63,5 @@ class Chunk:
     chunk_number: int
 
     metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    embedding: list[float] | None = None

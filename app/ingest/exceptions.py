@@ -23,3 +23,11 @@ class ChunkingError(DocumentLoaderError):
     Raised when document chunking fails.
     """
     pass
+
+
+class EmbeddingError(Exception):
+    """Raised when text-to-vector embedding fails.
+ 
+    Covers model loading failures, encoding failures, and invalid
+    input (e.g. empty chunk text reaching the embedder).
+    """
