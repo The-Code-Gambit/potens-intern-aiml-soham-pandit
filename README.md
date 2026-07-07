@@ -18,6 +18,10 @@ The goal of this project is to build a production-oriented Retrieval-Augmented G
 
 The implementation emphasizes clean software architecture, modularity, maintainability, and production-ready engineering practices.
 
+
+Note: Due to the fixed time constraints of the take-home assignment, this repository contains a solid implementation of the document ingestion, preprocessing, chunking, and embedding pipeline. The remaining retrieval, vector storage, and QA components are outlined in the architecture and planned for subsequent implementation.
+
+
 ---
 
 # Current Progress
