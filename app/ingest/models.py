@@ -15,7 +15,11 @@ class Page:
 
     page_number: int
 
+    # Original extracted text
     text: str
+
+    # Filled by cleaner.py
+    cleaned_text: str = ""
 
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -35,3 +39,24 @@ class DocumentInfo:
     total_pages: int
 
     file_size: int
+    
+class Chunk:
+    """
+    Represents one semantic chunk ready for embedding.
+    """
+
+    chunk_id: str
+
+    document_id: str
+
+    file_name: str
+
+    page_start: int
+
+    page_end: int
+
+    text: str
+
+    token_count: int
+
+    metadata: Dict[str, Any] = field(default_factory=dict)
