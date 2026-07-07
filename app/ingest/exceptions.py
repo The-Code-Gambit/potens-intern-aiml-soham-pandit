@@ -16,3 +16,10 @@ class EmptyDocumentError(DocumentLoaderError):
 
 class EncryptedDocumentError(DocumentLoaderError):
     """Raised when an encrypted PDF cannot be opened."""
+    
+    
+class ChunkingError(DocumentLoaderError):
+    """
+    Raised when document chunking fails.
+    """
+    pass

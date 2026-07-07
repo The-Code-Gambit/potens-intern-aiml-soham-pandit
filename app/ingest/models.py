@@ -40,9 +40,10 @@ class DocumentInfo:
 
     file_size: int
     
+@dataclass(slots=True)
 class Chunk:
     """
-    Represents one semantic chunk ready for embedding.
+    Represents one semantic chunk.
     """
 
     chunk_id: str
@@ -51,12 +52,14 @@ class Chunk:
 
     file_name: str
 
+    text: str
+
+    token_count: int
+
     page_start: int
 
     page_end: int
 
-    text: str
-
-    token_count: int
+    chunk_number: int
 
     metadata: Dict[str, Any] = field(default_factory=dict)
