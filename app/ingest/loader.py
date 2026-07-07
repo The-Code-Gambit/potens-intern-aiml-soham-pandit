@@ -19,6 +19,16 @@ This module does NOT perform:
 - Embedding
 """
 
+import hashlib
+
+import fitz  # PyMuPDF
+
+from app.ingest.exceptions import (
+    CorruptedDocumentError,
+    EmptyDocumentError,
+    EncryptedDocumentError,
+)
+
 from pathlib import Path
 from typing import List
 
@@ -103,27 +113,126 @@ class DocumentLoader:
             )
 
     def _load_pdf(self, file_path: Path) -> List[Page]:
-        """
-        Placeholder for PDF loading.
+     """
+     Load a PDF document page by page.
 
-        Will be implemented in the next commit.
-        """
+     Returns
+     -------
+     List[Page]
 
-        logger.info("PDF loader invoked for %s", file_path)
+     Raises
+     ------
+     CorruptedDocumentError
+     EncryptedDocumentError
+     EmptyDocumentError
+     """
 
-        raise NotImplementedError(
-            "PDF loading not implemented yet."
+     logger.info("Opening PDF: %s", file_path)
+
+     try:
+        document = fitz.open(file_path)
+
+     except Exception as exc:
+        logger.exception("Failed to open PDF.")
+        raise CorruptedDocumentError(str(exc)) from exc
+
+     if document.needs_pass:
+        raise EncryptedDocumentError(
+            f"{file_path.name} is password protected."
         )
+
+     document_id = self._generate_document_id(file_path)
+
+     pages: List[Page] = []
+
+     metadata = document.metadata
+
+     for page_index in range(document.page_count):
+
+        page = document.load_page(page_index)
+
+        text = page.get_text("text")
+
+        if not text.strip():
+            logger.warning(
+                "Skipping empty page %d",
+                page_index + 1,
+            )
+            continue
+
+        pages.append(
+            Page(
+                document_id=document_id,
+                file_name=file_path.name,
+                file_path=file_path,
+                page_number=page_index + 1,
+                text=text,
+                metadata={
+                    "title": metadata.get("title"),
+                    "author": metadata.get("author"),
+                    "subject": metadata.get("subject"),
+                },
+            )
+        )
+
+     document.close()
+
+     if not pages:
+        raise EmptyDocumentError(
+            f"No extractable text found in {file_path.name}"
+        )
+
+     logger.info(
+        "Loaded %d pages from %s",
+        len(pages),
+        file_path.name,
+     )
+
+     return pages
 
     def _load_txt(self, file_path: Path) -> List[Page]:
-        """
-        Placeholder for TXT loading.
+     """
+     Load a plain text file.
+     """
 
-        Will be implemented in the next commit.
-        """
+     logger.info("Opening text file: %s", file_path)
 
-        logger.info("TXT loader invoked for %s", file_path)
+     try:
 
-        raise NotImplementedError(
-            "TXT loading not implemented yet."
+        text = file_path.read_text(
+            encoding="utf-8"
         )
+
+     except UnicodeDecodeError as exc:
+        raise DocumentLoaderError(
+            "Unable to decode text file."
+        ) from exc
+
+     if not text.strip():
+        raise EmptyDocumentError(
+            f"{file_path.name} is empty."
+        )
+
+     return [
+        Page(
+            document_id=self._generate_document_id(file_path),
+            file_name=file_path.name,
+            file_path=file_path,
+            page_number=1,
+            text=text,
+            metadata={},
+        )
+     ]
+        
+    def _generate_document_id(self, file_path: Path) -> str:
+       """
+        Generate a stable document ID using the SHA-256 hash of the file contents.
+       """
+
+       sha256 = hashlib.sha256()
+
+       with file_path.open("rb") as file:
+        while chunk := file.read(8192):
+            sha256.update(chunk)
+
+       return sha256.hexdigest()    
